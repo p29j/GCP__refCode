@@ -1,0 +1,29 @@
+
+# to create topic using gcloud
+gcloud beta pubsub topics create sandiego 
+
+# to publish to message to topic
+gcloud beta pubsub topics publish sandeigo “hello”
+
+# to create topic and publish message using custom code
+from google.could import pubsub
+client = pubsub.Client()
+
+topic = client.topic(“sandiego”)
+topic.create()
+topic.publish('hello')
+
+# to create subscriptions
+gcloud beta pubsub subscriptions create --topic sandeigo mySub1
+
+# to pull messages
+gcloud beta pubsub subscriptions pull --auto-ack mySub1
+
+# using custom code
+subscription = topic.subscription(subscription_name)
+subscription.create()
+
+results = subscription.pull(return_immediately=True)
+
+if results:
+subscription.ackowledge([ack_id for ack_id, message in results])
