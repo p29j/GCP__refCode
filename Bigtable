@@ -1,0 +1,75 @@
+
+# create a Bigtable cluster using gcloud
+gcloud beta bigtable instances create INSTANCE --cluster=CLUSTER \
+     --cluster-zone=CLUSTER_ZONE \
+     [--instance-type=INSTANCE_TYPE; default="PRODUCTION"] \
+     [--cluster-num-nodes=CLUSTER_NUM_NODES] \
+     --description=DESCRIPTION [--async] \
+     [--cluster-storage-type=CLUSTER_STORAGE_TYPE; default="SSD"]
+
+# connect to Bigtable instance and create table
+from google.cloud import bigtable
+
+client = bigtable.Client(project=project_id, admin=True)
+instance = client.instance(instance_id)
+
+print('Creating the {} table.'.format(table_id))
+table = instance.table(table_id)
+table.create()
+column_family_id = 'cf1'
+cf1 = table.column_family(column_family_id)
+cf1.create()
+
+# write rows into table
+column_id = 'greeting'.encode('utf-8')
+greetings = ['Hello World!', 'Hello Cloud Bigtable!', 'Hello Python!']
+
+for i, value in enumerate(greetings):
+    row_key = 'greeting{}'.format(i)
+    row = table.row(row_key)
+    row.set_cell(
+        column_family_id,
+        column_id,
+        value.encode('utf-8'))
+    row.commit()
+
+
+# create table
+BigtableOptions.Builder optionsBuilder = new BigtableOptions.Builder()
+            .setProjectId(options.getProject())
+            .setInstanceId(INSTANCE_ID).setUserAgent("my-program-name");
+
+BigtableSession Session = new BigtableSession(
+             optionsBuilder.setCredentialOptions(
+             CredentialOptions.credential(
+             optoins.as(GcpOptions.class).getGcpCredential())).build());
+
+BigtableTableAdminClient tableAdminClient = session.getTableAdminClient();
+
+CreateTableRequest.Builder createTableRequestBuilder = 
+     CreateTableRequest.newBuilder().setParent(getInstanceName(options)).
+     setTableId(TABLE_ID).setTable(tableBuilder.build());
+
+ tableAdminClient.createTable(createTableRequestBuilder.build());
+
+
+# convert object to Mutation(s) inside a ParDo
+LaneInfo info = c.element();
+DateTIme ts = fmt.parseDateTime(info.getTimestamp().replace('T',''));
+// key is HIGHWAY#DIR#LANE#SENSORID#REVTS
+String key = info.getHighway() ...
+
+List<Mutation> mutations = new ArrayList<>();
+
+mutations.add(Mutation.newBuilder().setCell(Mutation.setCell.newBuilder().
+                setValue(Double.toString(info.getLatitude()))//
+                .setFamilyName(CF_FAMILY).setColumnQualifier("latitude")//
+                .setTimestampMicros(ts)).build())
+
+                //other columns
+c.output(KV.of(ByteString.copyFormUtf8(key), mutations));
+
+
+# write mutations to Bigtable
+mutations.apply("write:cbt", 
+                 BigtableIO.write().withBigtableOptions(optionsBuilder.build()).withTableId(TABLE_ID))
